@@ -51,3 +51,7 @@ rsconnect/
 .Rdata
 .DS_Store
 .quarto
+
+#
+*.csv
+*.txt
