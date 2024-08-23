@@ -55,7 +55,7 @@ grid_cells <- c(cols = 1440, rows = 720)
 # user    119m12.030s
 # sys     2m16.657s
 cores_process_csv <- 1L
-cores_compute_season <- 2L
+cores_compute_season <- 4L
 
 
 #---- Utility ----
@@ -123,6 +123,7 @@ files_df <-
     )
 
 future::plan(sequential)
+gc()
 
 saveRDS(
     object = files_df, 
@@ -152,6 +153,9 @@ sf::st_write(
     file.path(out_dir, "month_sum.gpkg"),
     delete_layer = TRUE
 )
+
+rm(month_sum)
+gc()
 
 # Average count for each month.
 rlog::log_info("Computing month_df...")
@@ -212,6 +216,9 @@ sf::st_write(
     delete_layer = TRUE
 )
 
+rm(season_peak_thres_df)
+gc()
+
 rlog::log_info("Computing season using double sigmoidal...")
 season_dsig_df <-
     month_df %>%
@@ -244,6 +251,7 @@ season_dsig_df <-
     dplyr::bind_rows()
 
 future::plan(sequential)
+gc()
 
 # Export the merged sf.
 sf::st_write(
@@ -251,6 +259,9 @@ sf::st_write(
     file.path(out_dir, "season_dsig_df.gpkg"),
     delete_layer = TRUE
 )
+
+rm(season_dsig_df)
+gc()
 
 rlog::log_info("Finished!")
 
