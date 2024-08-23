@@ -1,11 +1,12 @@
 #library(data.table)
 library(dplyr)
-library(dtplyr)
+#library(dtplyr)
 library(furrr)
 library(lubridate)
 library(purrr)
 library(readr)
 library(rlang)
+library(rlog)
 library(sf)
 library(stringr)
 library(tidyr)
@@ -13,12 +14,14 @@ library(tidyr)
 ## Install seasonmetrics
 # library(devtools)
 # load_all()
+# document()
 # install()
 library(seasonmetrics)
 
 
 
 #---- Setup ----
+rlog::log_info("Start new process -------------------------------------------")
 
 # VIIRS data.
 csv_files <- "/home/alber/Documents/github/seasonmetrics/inst/extdata/VIIRS"
@@ -39,7 +42,7 @@ id_col = "cell_id"
 
 #NOTE: Use coarser resolution when debugging.
 grid_cells <- c(cols = 1440, rows = 720)
-grid_cells <- c(cols = 144, rows = 72)
+#grid_cells <- c(cols = 144, rows = 72)
 
 # Machine: Ubuntu 22 running on WSL2.
 # Model name: Intel(R) Xeon(R) CPU E5-2640 v3 @ 2.60GHz
@@ -56,6 +59,7 @@ cores_compute_season <- 2L
 
 
 #---- Utility ----
+rlog::log_info("Loading utility functions...")
 
 process_csv <- function(x, xy_min, xy_max, grid_cells, grid_crs, id_col) {
 
@@ -68,7 +72,7 @@ process_csv <- function(x, xy_min, xy_max, grid_cells, grid_crs, id_col) {
         #data.table::as.data.table() %>%
         dplyr::select(longitude, latitude, acq_date) %>%
         #NOTE: Use a subsample when debugging.
-        dplyr::sample_n(1000) %>%
+        #dplyr::sample_n(1000) %>%
         dplyr::mutate(ac_date = lubridate::as_date(acq_date),
                       year = lubridate::year(ac_date),
                       month = lubridate::month(ac_date)) %>%
@@ -96,20 +100,21 @@ process_csv <- function(x, xy_min, xy_max, grid_cells, grid_crs, id_col) {
 
 
 #---- Script ----
+rlog::log_info("Processing CSV files...")
 
 if (cores_process_csv > 1) {
     future::plan(multisession, workers = cores_process_csv)
     options <- furrr::furrr_options(seed = 123)
 }
 
-# List files.
+# List and pre-process CSV files.
 files_df <-
     csv_files %>%
     list.files(pattern = "*.csv", full.names = TRUE) %>%
     dplyr::as_tibble() %>%
     dplyr::rename(file_path = "value") %>%
     #NOTE: Use less files when debugging.
-    dplyr::slice(1:2) %>%
+    #dplyr::slice(1:2) %>%
     dplyr::mutate(
         data = furrr::future_map(file_path, process_csv,
             xy_min = xy_min, xy_max = xy_max, grid_cells = grid_cells,
@@ -124,6 +129,7 @@ saveRDS(
     file = files_df_rds
 )
 
+rlog::log_info("Computing month_sum...")
 month_sum <-
     files_df %>%
     dplyr::pull(data) %>%
@@ -148,6 +154,7 @@ sf::st_write(
 )
 
 # Average count for each month.
+rlog::log_info("Computing month_df...")
 month_df <-
     files_df %>%
     dplyr::pull(data) %>%
@@ -167,6 +174,7 @@ if (cores_compute_season > 1) {
     options <- furrr::furrr_options(seed = 123)
 }
 
+rlog::log_info("Computing season using peak and threshold...")
 season_peak_thres_df <-
     month_df %>%
     dplyr::select({{id_col}}, month, max_n) %>%
@@ -197,8 +205,6 @@ season_peak_thres_df <-
     }, id_col = id_col) %>%
     dplyr::bind_rows()
 
-future::plan(sequential)
-
 # Export the merged sf.
 sf::st_write(
     merge(fire_grid, season_peak_thres_df, by = id_col),
@@ -206,6 +212,7 @@ sf::st_write(
     delete_layer = TRUE
 )
 
+rlog::log_info("Computing season using double sigmoidal...")
 season_dsig_df <-
     month_df %>%
     dplyr::select({{id_col}}, month, max_n) %>%
@@ -244,4 +251,6 @@ sf::st_write(
     file.path(out_dir, "season.gpkg"),
     delete_layer = TRUE
 )
+
+rlog::log_info("Finished!")
 

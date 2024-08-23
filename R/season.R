@@ -1,17 +1,23 @@
-#' Compute the season using its peak and a threshold
+#' Compute a season using cyclical observations
 #'
 #' @description
-#' Given a vector representing a cycle of observations (e.g. 12 observations),
-#' estimate the season start and end using the season peak and a threshold. For
-#' example, given a year of monthly observations, the peak season is the
-#' minimum subset of consecutive values around the peak value that reach the
-#' a given threshold.
+#' Cyclical observations refers to vector on which the element before the first
+#' is the last one, and the element after the last vector element is the first
+#' one.
 #'
-#' @param x a numeric. The values observed during a cycle.
+#' `compute_season_peak_threshold` estimate season's parameters using the
+#' season maximum value and a threshold. For example, given a year of monthly
+#' observations, the peak season is the minimum subset of consecutive values
+#' around the maximum value (the peak) that reach the given threshold.
+#'
+#' `compute_season_double_sig` estimate season's parameters by adjusting a
+#' double sigmoidal function to the observations.
+#'
+#' @param x a numeric. A vector of cyclical observations.
 #' @param threshold_cons a numeric(1) between 0 and 1. The percentage of the
 #'   total a season must reach.
 #'
-#' @return a data frame with season metrics.
+#' @return a data frame with season's metrics.
 #'
 #' @export
 #'
@@ -92,9 +98,10 @@ get_prev_next <- function(y, total_len) {
 
 
 
-
-
-
+#' @rdname compute_season_peak_threshold
+#'
+#' @export
+#'
 compute_season_double_sig <- function(x) {
 
     stopifnot("Can't handle NAs!" = sum(is.na(x)) == 0)
@@ -232,3 +239,4 @@ get_na_df <- function() {
         val_sd   = NA 
     ))
 }
+

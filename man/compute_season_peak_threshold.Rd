@@ -2,23 +2,32 @@
 % Please edit documentation in R/season.R
 \name{compute_season_peak_threshold}
 \alias{compute_season_peak_threshold}
-\title{Compute the season using its peak and a threshold}
+\alias{compute_season_double_sig}
+\title{Compute a season using cyclical observations}
 \usage{
 compute_season_peak_threshold(x, threshold_cons)
+
+compute_season_double_sig(x)
 }
 \arguments{
-\item{x}{a numeric. The values observed during a cycle.}
+\item{x}{a numeric. A vector of cyclical observations.}
 
 \item{threshold_cons}{a numeric(1) between 0 and 1. The percentage of the
 total a season must reach.}
 }
 \value{
-a data frame with season metrics.
+a data frame with season's metrics.
 }
 \description{
-Given a vector representing a cycle of observations (e.g. 12 observations),
-estimate the season start and end using the season peak and a threshold. For
-example, given a year of monthly observations, the peak season is the
-minimum subset of consecutive values around the peak value that reach the
-a given threshold.
+Cyclical observations refers to vector on which the element before the first
+is the last one, and the element after the last vector element is the first
+one.
+
+\code{compute_season_peak_threshold} estimate season's parameters using the
+season maximum value and a threshold. For example, given a year of monthly
+observations, the peak season is the minimum subset of consecutive values
+around the maximum value (the peak) that reach the given threshold.
+
+\code{compute_season_double_sig} estimate season's parameters by adjusting a
+double sigmoidal function to the observations.
 }
