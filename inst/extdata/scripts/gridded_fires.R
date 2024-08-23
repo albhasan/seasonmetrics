@@ -208,7 +208,7 @@ season_peak_thres_df <-
 # Export the merged sf.
 sf::st_write(
     merge(fire_grid, season_peak_thres_df, by = id_col),
-    file.path(out_dir, "season.gpkg"),
+    file.path(out_dir, "season_peak_thres_df.gpkg"),
     delete_layer = TRUE
 )
 
@@ -248,7 +248,7 @@ future::plan(sequential)
 # Export the merged sf.
 sf::st_write(
     merge(fire_grid, season_dsig_df, by = id_col),
-    file.path(out_dir, "season.gpkg"),
+    file.path(out_dir, "season_dsig_df.gpkg"),
     delete_layer = TRUE
 )
 
