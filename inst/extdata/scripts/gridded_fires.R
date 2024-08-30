@@ -39,6 +39,9 @@ xy_max <- c(180, 90)
 grid_crs <- 4326
 id_col = "cell_id"
 
+# Double sigmoid fitting attempts.
+n_runs_min <- 12
+n_runs_max <- 48 
 
 #NOTE: Use coarser resolution when debugging.
 grid_cells <- c(cols = 1440, rows = 720)
@@ -54,8 +57,16 @@ grid_cells <- c(cols = 1440, rows = 720)
 # real    112m43.654s
 # user    119m12.030s
 # sys     2m16.657s
+#--------------------------------------------------------
+#
+# Compute seasons 2 cores
+# 2024-08-23 11:30:54.933611 [INFO] Computing month_df...
+# 2024-08-23 11:48:25.315343 [INFO] Computing season using double sigmoidal...
+# 2024-08-25 20:54:03.729327 [INFO] Finished!
+
+
 cores_process_csv <- 1L
-cores_compute_season <- 4L
+cores_compute_season <- 8L
 
 
 #---- Utility ----
@@ -168,6 +179,7 @@ month_df <-
     dplyr::summarize(
         min_n = min(n_points),
         mean_n = mean(n_points),
+        median_n = stats::median(n_points),
         max_n = max(n_points),
         sd_n = sd(n_points)
     ) %>%
@@ -244,7 +256,8 @@ season_dsig_df <-
         x %>%
             dplyr::arrange(month) %>%
             dplyr::pull(max_n) %>%
-            compute_season_double_sig() %>%
+            compute_season_double_sig(n_runs_min = n_runs_min,
+                                      n_runs_max = n_runs_max) %>%
             dplyr::mutate("{id_col}" := c_id) %>%
             return()
     }, id_col = id_col) %>%

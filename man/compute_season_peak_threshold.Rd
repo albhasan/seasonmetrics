@@ -7,13 +7,16 @@
 \usage{
 compute_season_peak_threshold(x, threshold_cons)
 
-compute_season_double_sig(x)
+compute_season_double_sig(x, n_runs_min = 20, n_runs_max = 500)
 }
 \arguments{
 \item{x}{a numeric. A vector of cyclical observations.}
 
 \item{threshold_cons}{a numeric(1) between 0 and 1. The percentage of the
 total a season must reach.}
+
+\item{n_runs_min, n_runs_max}{an integer(1). Minimum and maximum number of
+successful fitting attempts.}
 }
 \value{
 a data frame with season's metrics.

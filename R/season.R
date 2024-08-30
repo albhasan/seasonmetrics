@@ -100,9 +100,12 @@ get_prev_next <- function(y, total_len) {
 
 #' @rdname compute_season_peak_threshold
 #'
+#' @param n_runs_min,n_runs_max an integer(1). Minimum and maximum number of
+#'   successful fitting attempts.
+#'
 #' @export
 #'
-compute_season_double_sig <- function(x) {
+compute_season_double_sig <- function(x, n_runs_min = 20, n_runs_max = 500) {
 
     stopifnot("Can't handle NAs!" = sum(is.na(x)) == 0)
 
@@ -128,12 +131,14 @@ compute_season_double_sig <- function(x) {
     # Do the double-sigmoidal fit
     model_fit <- sicegar::multipleFitFunction(
         dataInput = sic_norm_df,
-        model = "doublesigmoidal"
+        model = "doublesigmoidal",
+        n_runs_min = n_runs_min,
+        n_runs_max = n_runs_max
     )
 
     # Check that the model fits.
     if (!model_fit[["isThisaFit"]]) {
-        #TODO: Return NAs.
+        return(get_na_df())
     }
 
     # Estimate extra parameters.
@@ -141,8 +146,8 @@ compute_season_double_sig <- function(x) {
 
     # Build a data frame with season parameters.
     season_df <- data.frame(
-        pos_from = m_par[["midPoint1_x"]] + 
-            un_center(m_par[["midPoint1_x"]], x_df = x_df),
+        pos_from = (m_par[["midPoint1_x"]] + 
+            un_center(m_par[["midPoint1_x"]], x_df = x_df)) %% length(x),
         val_from = m_par[["midPoint1_y"]] + x_min,
         pos_to   = (m_par[["midPoint2_x"]] +
             un_center(m_par[["midPoint2_x"]], x_df = x_df)) %% length(x),
