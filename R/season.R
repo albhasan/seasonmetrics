@@ -193,8 +193,8 @@ un_center <- function(pos, x_df) {
 #' Center around the peak value
 #'
 #' @description
-#' Center the given vector around its peak. In this way, the peak would be at
-#' the center position in the vector.
+#' Center the given vector around its peak (maximum value). In this way, the
+#' peak would be at the center position in the vector.
 #'
 #' @param x a numeric. A vector of cyclic observations.
 #'

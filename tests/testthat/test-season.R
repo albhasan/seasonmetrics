@@ -1,4 +1,3 @@
-
 # Default values for sicegar::multipleFitFunction:
 n_runs_min <- 20
 n_runs_max <- 500
@@ -412,6 +411,48 @@ test_that("compute_season_double_sig works with real examples", {
         is.na(season_df[["val_min"]]),
         compare_num(season_df[["pos_max"]],    9.0809523953, tol = tol_pos),
         compare_num(season_df[["val_max"]],   30.9303400657, tol = tol),
+        is.na(season_df[["val_len"]]),
+        is.na(season_df[["val_mean"]]),
+        is.na(season_df[["val_sd"]])
+    ))
+
+    # TODO: Does this make sense? Chekc the pos_from, the post_to, and the 
+    #       posmax
+    set.seed(123)
+    x <- c( 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0) # cell_id 58814
+    season_df <- compute_season_double_sig(x, n_runs_min = n_runs_min,
+                                              n_runs_max = n_runs_max)
+    test_base_colnames(season_df)
+    #lapply(season_df, sprintf, fmt = "%.10f")
+    expect_true(all(
+        compare_num(season_df[["pos_from"]],   1.8323351306, tol = tol_pos),
+        compare_num(season_df[["val_from"]],   0.1714656034, tol = tol),
+        compare_num(season_df[["pos_to"]],     1.8323269430, tol = tol_pos),
+        compare_num(season_df[["val_to"]],     0.1714612881, tol = tol),
+        is.na(season_df[["pos_min"]]),
+        is.na(season_df[["val_min"]]),
+        compare_num(season_df[["pos_max"]],    2.1576600590, tol = tol_pos),
+        compare_num(season_df[["val_max"]],    0.3429315361, tol = tol),
+        is.na(season_df[["val_len"]]),
+        is.na(season_df[["val_mean"]]),
+        is.na(season_df[["val_sd"]])
+    ))
+
+    set.seed(123)
+    x <- c(6, 8, 4, 7, 11, 19, 10, 9, 8, 12, 4, 7) 
+    season_df <- compute_season_double_sig(x, n_runs_min = n_runs_min,
+                                              n_runs_max = n_runs_max)
+    test_base_colnames(season_df)
+    #lapply(season_df, sprintf, fmt = "%.10f")
+    expect_true(all(
+        compare_num(season_df[["pos_from"]],   3.3572040924, tol = tol_pos),
+        compare_num(season_df[["val_from"]],   7.2944226567, tol = tol),
+        compare_num(season_df[["pos_to"]],    10.5057208346, tol = tol_pos),
+        compare_num(season_df[["val_to"]],     9.4195235894, tol = tol),
+        is.na(season_df[["pos_min"]]),
+        is.na(season_df[["val_min"]]),
+        compare_num(season_df[["pos_max"]],   10.1536307659, tol = tol_pos),
+        compare_num(season_df[["val_max"]],   10.5888632141, tol = tol),
         is.na(season_df[["val_len"]]),
         is.na(season_df[["val_mean"]]),
         is.na(season_df[["val_sd"]])
