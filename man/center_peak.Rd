@@ -16,5 +16,5 @@ reordered according to center_pos.
 }
 \description{
 Center the given vector around its peak (maximum value). In this way, the
-peak would be at the center position in the vector.
+peak would be at or close to the center position in the vector.
 }

@@ -149,21 +149,16 @@ compute_season_double_sig <- function(x, n_runs_min = 20, n_runs_max = 500) {
 
   # Check that the model fits.
   if (!model_fit[["isThisaFit"]]) {
-    return(get_na_df())
+    return(res)
   }
 
   # Estimate additional parameters.
   m_par <- sicegar::parameterCalculation(model_fit)
 
   # Build a data frame with season parameters.
-  res["val_from"] <- m_par[["midPoint1_y"]]    + x_min
-  res["val_to"]   <- m_par[["midPoint2_y"]]    + x_min
-  res["val_max"]  <- m_par[["reachMaximum_y"]] + x_min
-  res["val_len"] <- ifelse(
-    res[["pos_from"]] <= res[["pos_to"]],
-    res[["pos_to"]] - res[["pos_from"]],
-    (res[["pos_to"]] + length(x)) - res[["pos_from"]]
-  )
+  res["val_from"] <- m_par[["midPoint1_y"]]    + v_min
+  res["val_to"]   <- m_par[["midPoint2_y"]]    + v_min
+  res["val_max"]  <- m_par[["reachMaximum_y"]] + v_min
   res["pos_from"] <-
     (m_par[["midPoint1_x"]] +
      un_center(m_par[["midPoint1_x"]], x_df = x_df)) %% length(x)
@@ -173,6 +168,11 @@ compute_season_double_sig <- function(x, n_runs_min = 20, n_runs_max = 500) {
   res["pos_max"] <-
     (m_par[["reachMaximum_x"]] +
      un_center(m_par[["reachMaximum_x"]], x_df = x_df)) %% length(x)
+  res["val_len"] <- ifelse(
+    res[["pos_from"]] <= res[["pos_to"]],
+    res[["pos_to"]] - res[["pos_from"]],
+    (res[["pos_to"]] + length(x)) - res[["pos_from"]]
+  )
 
   return(res)
 }
@@ -214,15 +214,12 @@ un_center <- function(pos, x_df) {
 #' reordered according to center_pos.
 #'
 center_peak <- function(x) {
+  pos_mid <- which.max(x) - (length(x) / 2)
   data_df <- data.frame(
-    x = x,
-    pos = seq_along(x)
+    x = displace_vec(x, n_pos = pos_mid),
+    pos = displace_vec(seq_along(x), n_pos = pos_mid)
   )
-  data_df["center_pos"] <- displace_vec(
-    x,
-    n_pos = which.max(x) - (length(x) / 2)
-  )
-  data_df <- data_df[order(data_df[["center_pos"]]), ]
+  data_df["center_pos"] <- seq_along(x)
   return(data_df)
 }
 

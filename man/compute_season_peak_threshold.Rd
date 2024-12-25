@@ -19,7 +19,19 @@ total a season must reach.}
 successful fitting attempts.}
 }
 \value{
-a data frame with season's metrics.
+a data frame with metrics:
+\itemize{
+\item \code{pos_from} and \code{pos_to} are the indices of the season's first and last
+elements in \code{x}.
+\item \code{val_from} and \code{val_to} area the values at \code{pos_from} and \code{pos_to}.
+\item \code{pos_min} and \code{pos_max} are the indices where the season reaches its
+mininum and maximum values.
+\item \code{val_min} and \code{val_max} are the values at \code{pos_min} and \code{pos_max}.
+\item \code{val_len} is the season length. Note that the first element is included
+when estimating the length for \code{compute_season_peak_threshold}.
+\item \code{val_mean} is the mean of the values in the season.
+\item \code{val_sd} is the standard deviation of the values in the season.
+}
 }
 \description{
 Cyclical observations refers to vector on which the element before the first
