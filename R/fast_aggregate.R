@@ -60,7 +60,10 @@ process_csv_fast <- function(file_path, grid_origin, grid_size) {
 #' using the ceentroids (cell_id).
 #'
 add_cell_ids <- function(data_tb, grid_origin, grid_size) {
-  stopifnot(all(c("longitude", "latitude") %in% colnames(data_tb)))
+  stopifnot(
+    "Longitude and latitude columns not found!" =
+      all(c("longitude", "latitude") %in% colnames(data_tb))
+  )
   ji_mt <- ji(
     xy = cbind(data_tb[["longitude"]], data_tb[["latitude"]]),
     origin = grid_origin,
@@ -71,6 +74,7 @@ add_cell_ids <- function(data_tb, grid_origin, grid_size) {
   data_tb["cell_id"] <- paste(ji_mt[, 1], ji_mt[, 2], sep = "_")
   return(data_tb)
 }
+
 
 
 #' Estimate the grid cell of each point.
