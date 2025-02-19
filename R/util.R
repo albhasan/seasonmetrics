@@ -6,6 +6,8 @@
 #'
 #' @return a terra object (raster).
 #'
+#' @export
+#'
 blank_raster <- function(grid_cells, xy_min, xy_max, grid_crs) {
   terra::rast(
     nrows = grid_cells[["rows"]],
