@@ -7,6 +7,8 @@
 #'
 #' @return a data frame.
 #'
+#' @export
+#'
 sort_cols <- function(df) {
   df <-
     df |>
