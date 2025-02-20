@@ -169,6 +169,11 @@ all_years_dsig <-
 
 future::plan(future::sequential)
 
+saveRDS(
+  object = all_years_dsig,
+  file = file.path(out_dir, "all_years_dsig.rds")
+)
+
 # Remove failed fits.
 all_years_dsig <- all_years_dsig[sapply(all_years_dsig, is.data.frame)]
 
@@ -267,6 +272,11 @@ two_years_dsig <-
   )
 
 future::plan(future::sequential)
+
+saveRDS(
+  object = two_years_dsig,
+  file = file.path(out_dir, "all_years_dsig.rds")
+)
 
 # Remove failed fits.
 two_years_dsig <- two_years_dsig[sapply(two_years_dsig, is.data.frame)]

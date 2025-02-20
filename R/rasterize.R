@@ -9,6 +9,8 @@
 #'
 #' @return a terra object (raster).
 #'
+#' @export
+#'
 rasterize_points <- function(vname, data_sf, grid_r) {
   return(terra::rasterize(
     x = terra::vect(data_sf[vname]),
