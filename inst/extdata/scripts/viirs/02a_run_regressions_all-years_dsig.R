@@ -41,8 +41,8 @@ source(
   )
 )
 stopifnot(
-  "double sigmoid parameters not found!" =
-    all(c("n_run_min", "n_run_max") %in% ls())
+  "Double sigmoid parameters not found!" =
+    all(c("n_runs_min", "n_runs_max") %in% ls())
 )
 
 # Load grid parameters.
