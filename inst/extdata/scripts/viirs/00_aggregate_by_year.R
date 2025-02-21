@@ -1,6 +1,6 @@
 ###############################################################################
 # 00 AGGREGATE VIIRS DATA
-# NOTE: The results are 19M. The maximum allowed in a package is 5M
+# NOTE: The results are 14M. The maximum allowed in a package is 5M
 ###############################################################################
 
 library(dplyr)
@@ -11,22 +11,23 @@ library(rlog)
 library(seasonmetrics)
 
 
-rlog::log_info("Start new process 00_aggregate_by_year ----------------------")
+rlog::log_info("Start new process -------------------------------------------")
 
 #---- Setup ----
 
 rlog::log_info("Reading parameters...")
 
-# VIIRS data.
-csv_files <- "/home/alber/Documents/data/r_packages/seasonmetrics/VIIRS"
-stopifnot("CSV directory not found!" = dir.exists(csv_files))
-
-out_dir <-
-  "/home/alber/Documents/results/r_packages/seasonmetrics/results_07/viirs"
-stopifnot("Output directory not found!" = dir.exists(out_dir))
-
-files_df_rds <- file.path(out_dir, "files_df.rds")
-stopifnot("Previous `files_df_rds` file found!" = !file.exists(files_df_rds))
+csv_files <- out_dir <- files_df_rds <- NULL
+source(
+  system.file(
+    "extdata", "scripts", "viirs", "parameters.R",
+    package = "seasonmetrics"
+  )
+)
+stopifnot(
+  "Script parameter not found!" =
+    all(c("csv_files", "out_dir", "files_df_rds") %in% ls())
+)
 
 # Load grid parameters
 xy_min <- xy_max <- grid_cells <- NULL

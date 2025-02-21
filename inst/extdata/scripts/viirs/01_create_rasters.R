@@ -19,14 +19,17 @@ rlog::log_info("Start new process 01_create_rasters.R -----------------------")
 
 rlog::log_info("Reading parameters...")
 
-# NOTE: Check you're using the same results directory as the other scripts.
-out_dir <-
-  "/home/alber/Documents/results/r_packages/seasonmetrics/results_07/viirs"
-stopifnot("Output directory not found!" = !dir.exists(out_dir))
-
-files_df_rds <-
-  "/home/alber/Documents/results/r_packages/seasonmetrics/results_07/viirs/files_df.rds"
-stopifnot("`files_df_rds` file not found!" = file.exists(files_df_rds))
+out_dir <- files_df_rds <- NULL
+source(
+  system.file(
+    "extdata", "scripts", "viirs", "parameters.R",
+    package = "seasonmetrics"
+  )
+)
+stopifnot(
+  "Script parameter not found!" =
+    all(c("out_dir", "files_df_rds") %in% ls())
+)
 
 all_years_r_rds <- file.path(out_dir, "all_years_r.rds")
 stopifnot("Previous `all_years_r_rds` file found!" = !file.exists(all_years_r_rds))
@@ -38,7 +41,7 @@ stopifnot("Previous `two_years_r_rds` file found!" = !file.exists(two_years_r_rd
 xy_min <- xy_max <- grid_cells <- grid_crs <- NULL
 source(
   system.file(
-    "extdata", "scripts", "VIIRS", "grid_parameters.R",
+    "extdata", "scripts", "viirs", "parameters_grid.r",
     package = "seasonmetrics"
   )
 )
