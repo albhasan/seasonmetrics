@@ -36,7 +36,7 @@ stopifnot(
 n_runs_min <- n_runs_max <- NULL
 source(
   system.file(
-    "extdata", "scripts", "viirs", "parameters_dsig.r",
+    "extdata", "scripts", "viirs", "parameters_dsig.R",
     package = "seasonmetrics"
   )
 )
@@ -49,7 +49,7 @@ stopifnot(
 xy_min <- xy_max <- grid_cells <- grid_crs <- NULL
 source(
   system.file(
-    "extdata", "scripts", "viirs", "parameters_grid.r",
+    "extdata", "scripts", "viirs", "parameters_grid.R",
     package = "seasonmetrics"
   )
 )
@@ -62,7 +62,7 @@ stopifnot(
 cores_compute_season <- NULL
 source(
   system.file(
-    "extdata", "scripts", "viirs", "parameters_computing.r",
+    "extdata", "scripts", "viirs", "parameters_computing.R",
     package = "seasonmetrics"
   )
 )
@@ -78,7 +78,7 @@ rlog::log_info("Loading utility functions...")
 
 source(
   system.file(
-    "extdata", "scripts", "viirs", "util_dsig.r",
+    "extdata", "scripts", "viirs", "util_dsig.R",
     package = "seasonmetrics"
   )
 )
