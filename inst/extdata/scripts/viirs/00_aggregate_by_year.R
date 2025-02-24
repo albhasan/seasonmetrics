@@ -33,7 +33,7 @@ stopifnot(
 xy_min <- xy_max <- grid_cells <- NULL
 source(
   system.file(
-    "extdata", "scripts", "VIIRS", "grid_parameters.R",
+    "extdata", "scripts", "viirs", "grid_parameters.R",
     package = "seasonmetrics"
   )
 )
