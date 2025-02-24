@@ -32,7 +32,7 @@ stopifnot(
     all(c("out_dir", "files_df_rds") %in% ls())
 )
 
-# # double sigmoid fitting attempts.
+# double sigmoid fitting attempts.
 n_runs_min <- n_runs_max <- NULL
 source(
   system.file(
