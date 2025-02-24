@@ -1,5 +1,5 @@
 # Input fire data.
-csv_files <- "/home/alber/documents/data/r_packages/seasonmetrics/viirs"
+csv_files <- "/home/alber/Documents/data/r_packages/seasonmetrics/viirs"
 stopifnot("Input directory not found!" = dir.exists(csv_files))
 
 # Directory for storing results.
