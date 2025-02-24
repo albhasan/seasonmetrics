@@ -41,7 +41,7 @@ stopifnot("Previous `two_years_r_rds` file found!" = !file.exists(two_years_r_rd
 xy_min <- xy_max <- grid_cells <- grid_crs <- NULL
 source(
   system.file(
-    "extdata", "scripts", "viirs", "parameters_grid.r",
+    "extdata", "scripts", "viirs", "parameters_grid.R",
     package = "seasonmetrics"
   )
 )
