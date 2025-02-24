@@ -32,7 +32,8 @@ season_peak_thres_helper <- function(
       dplyr::bind_rows(complement_df)
   }
   # Compute the season.
-  x |>
+  res <-
+    x |>
     dplyr::arrange(.data[[month_col]]) |>
     dplyr::pull(tidyselect::all_of(val_col)) |>
     seasonmetrics::compute_season_peak_threshold(
@@ -42,5 +43,6 @@ season_peak_thres_helper <- function(
       "{id_group}" := g_id,
       "{id_col}" := c_id
     )
-  return()
+
+  return(res)
 }
