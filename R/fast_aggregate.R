@@ -59,6 +59,8 @@ process_csv_fast <- function(file_path, grid_origin, grid_size) {
 #' @return a data frame with cell centroids (x_cent, y_cent) and a ID built
 #' using the ceentroids (cell_id).
 #'
+#' @export
+#'
 add_cell_ids <- function(data_tb, grid_origin, grid_size) {
   stopifnot(
     "Longitude and latitude columns not found!" =
