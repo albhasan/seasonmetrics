@@ -43,19 +43,22 @@ stopifnot(
     all(c("xy_min", "xy_max", "grid_cells") %in% ls())
 )
 
-# Parallel processing.
-cores_process_csv <- 2L
+# Load parallel processing parameters.
+cores_process_csv <- cores_compute_season <- NULL
+source(
+  system.file(
+    "extdata", "scripts", "modis", "parameters_computing.R",
+    package = "seasonmetrics"
+  )
+)
+stopifnot(
+  "Computing parameters not found!" =
+    all(c("cores_process_csv", "cores_compute_season") %in% ls())
+)
 
 
 
 #---- Script ----
-
-
-rlog::log_info("Setting parallel processing...")
-if (cores_process_csv > 1) {
-  future::plan(multisession, workers = cores_process_csv)
-  options <- furrr::furrr_options(seed = 123)
-}
 
 rlog::log_info("Listing CSV files...")
 files_df <-
@@ -63,6 +66,12 @@ files_df <-
   list.files(pattern = "*.csv$", full.names = TRUE) |>
   dplyr::as_tibble() |>
   dplyr::rename(file_path = "value")
+
+rlog::log_info("Setting parallel processing...")
+if (cores_process_csv > 1) {
+  future::plan(multisession, workers = cores_process_csv)
+  options <- furrr::furrr_options(seed = 123)
+}
 
 rlog::log_info("Processing CSV files...")
 files_df <-
@@ -77,10 +86,11 @@ files_df <-
     )
   )
 
+future::plan(sequential)
+gc()
+
 rlog::log_info("Saving results to disk...")
 saveRDS(object = files_df, file = files_df_rds)
 
-future::plan(sequential)
-gc()
 
 rlog::log_info("Finished!")

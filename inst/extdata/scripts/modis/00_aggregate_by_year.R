@@ -59,19 +59,18 @@ stopifnot(
 
 #---- Script ----
 
-
-rlog::log_info("Setting parallel processing...")
-if (cores_process_csv > 1) {
-  future::plan(multisession, workers = cores_process_csv)
-  options <- furrr::furrr_options(seed = 123)
-}
-
 rlog::log_info("Listing CSV files...")
 files_df <-
   csv_files |>
   list.files(pattern = "*.csv$", full.names = TRUE) |>
   dplyr::as_tibble() |>
   dplyr::rename(file_path = "value")
+
+rlog::log_info("Setting parallel processing...")
+if (cores_process_csv > 1) {
+  future::plan(multisession, workers = cores_process_csv)
+  options <- furrr::furrr_options(seed = 123)
+}
 
 rlog::log_info("Processing CSV files...")
 files_df <-
@@ -86,10 +85,10 @@ files_df <-
     )
   )
 
-rlog::log_info("Saving results to disk...")
-saveRDS(object = files_df, file = files_df_rds)
-
 future::plan(sequential)
 gc()
+
+rlog::log_info("Saving results to disk...")
+saveRDS(object = files_df, file = files_df_rds)
 
 rlog::log_info("Finished!")
