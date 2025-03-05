@@ -208,8 +208,14 @@ two_years_r_ls <-
   )
 
 
-
+# NOTE: terra objects need to be serialized before saving and
+# unserialized after reading (terra::unserialize).
 rlog::log_info("Saving to disk...")
+two_years_r_ls <- lapply(
+  X = two_years_r_ls,
+  FUN = terra::serialize,
+  connection = NULL
+)
 saveRDS(object = two_years_r_ls, file = two_years_r_rds)
 
 rlog::log_info("Finished!")
