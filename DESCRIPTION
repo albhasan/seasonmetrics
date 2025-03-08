@@ -1,6 +1,6 @@
 Package: seasonmetrics
 Title: Compute Season Metrics
-Version: 0.0.0.9009
+Version: 0.0.0.9010
 Authors@R: c(person("Alber",  "Sánchez",  email = "alber.ipia@inpe.br",       role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7966-2880")),
              person("Guilherme", "Mataveli", email = "mataveli@alumni.usp.br",        role = c("aut"), comment = c(ORCID = "0000-0002-4645-0117"))
             )
@@ -12,6 +12,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Suggests: 
     testthat (>= 3.0.0),
+    purrr,
     sf,
     tibble
 Config/testthat/edition: 3
