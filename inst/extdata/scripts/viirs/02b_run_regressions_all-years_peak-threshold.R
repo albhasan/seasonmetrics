@@ -76,7 +76,7 @@ rlog::log_info("Loading utility functions...")
 
 source(
   system.file(
-    "extdata", "scripts", "viirs", "util_peak-threshold.R",
+    "extdata", "scripts", "util", "util_peak-threshold.R",
     package = "seasonmetrics"
   )
 )

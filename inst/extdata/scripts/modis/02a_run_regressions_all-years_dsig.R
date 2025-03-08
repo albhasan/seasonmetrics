@@ -80,7 +80,7 @@ rlog::log_info("Loading utility functions...")
 
 source(
   system.file(
-    "extdata", "scripts", "modis", "util_dsig.R",
+    "extdata", "scripts", "util", "util_dsig.R",
     package = "seasonmetrics"
   )
 )
