@@ -12,6 +12,9 @@
 #' @export
 #'
 monthdec2date <- function(year, month_dec, time_zone = "UTC") {
+  if (any(is.na(year), is.na(month_dec))) {
+    return(NA)
+  }
   stopifnot("Invalid month!" = month_dec >= 1 && month_dec < 13)
   # Get the date to the first day of the month.
   base_date <-
