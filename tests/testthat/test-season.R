@@ -714,3 +714,28 @@ test_that("compute_season_double_sig works with real examples 4", {
   ))
 
 })
+
+test_that("compute_season_peak_threshold works with multicycle data", {
+
+  n_cyc <- 4
+  x <- sample.int(n = 100, size = 12 * n_cyc, replace = TRUE)
+  x_sum <- rowSums(matrix(data = x, ncol = length(x)/12, byrow = FALSE))
+
+  x1_df <- compute_season_peak_threshold(
+    x = x,
+    threshold_cons = 0.6,
+    x_cycles = n_cyc
+  )
+
+  x2_df <- compute_season_peak_threshold(
+    x = x_sum,
+    threshold_cons = 0.6,
+    x_cycles = 1
+  )
+
+  test_base_colnames(x1_df)
+  test_base_colnames(x2_df)
+
+  expect_true(all(x1_df == x2_df))
+
+})
