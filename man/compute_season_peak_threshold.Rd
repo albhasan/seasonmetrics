@@ -5,15 +5,19 @@
 \alias{compute_season_double_sig}
 \title{Compute a season using cyclical observations}
 \usage{
-compute_season_peak_threshold(x, threshold_cons)
+compute_season_peak_threshold(x, threshold_cons, x_cycles = 1L, f = "sum")
 
-compute_season_double_sig(x, n_runs_min = 20, n_runs_max = 500)
+compute_season_double_sig(x, x_cycles = 1, n_runs_min = 20, n_runs_max = 500)
 }
 \arguments{
 \item{x}{a numeric. A vector of cyclical observations.}
 
 \item{threshold_cons}{a numeric(1) between 0 and 1. The percentage of the
 total a season must reach.}
+
+\item{x_cycles}{a integer(1). Number of cycles in x.}
+
+\item{f}{a character(1). A function to apply to aggregate x along cycles.}
 
 \item{n_runs_min, n_runs_max}{an integer(1). Minimum and maximum number of
 successful fitting attempts.}
@@ -34,9 +38,9 @@ when estimating the length for \code{compute_season_peak_threshold}.
 }
 }
 \description{
-Cyclical observations refers to vector on which the element before the first
-is the last one, and the element after the last vector element is the first
-one.
+Cyclical observations refers to vectors on which the element before the
+first is the last one, and the element after the last vector element is the
+first one.
 
 \code{compute_season_peak_threshold} estimate season's parameters using the
 season maximum value and a threshold. For example, given a year of monthly

@@ -2,6 +2,7 @@
 
 export(add_cell_ids)
 export(blank_raster)
+export(compute_prodes_year)
 export(compute_season_double_sig)
 export(compute_season_peak_threshold)
 export(date2monthdec)

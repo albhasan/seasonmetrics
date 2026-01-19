@@ -4,17 +4,21 @@
 \alias{center_peak}
 \title{Center around the peak value}
 \usage{
-center_peak(x)
+center_peak(x, x_cycles = 1, f = "median")
 }
 \arguments{
 \item{x}{a numeric. A vector of cyclic observations.}
+
+\item{x_cycles}{a integer(1). Number of cycles in x.}
+
+\item{f}{a character(1). A function for aggregating data between cycles.}
 }
 \value{
-a data frame with 3 columns: x, the original position of each
+a data frame with at least 3 columns: the original position of each
 observation (pos), and the centered position (center_pos). The x column is
 reordered according to center_pos.
 }
 \description{
 Center the given vector around its peak (maximum value). In this way, the
-peak would be at or close to the center position in the vector.
+peak would be at, or close to, the center position in the vector.
 }

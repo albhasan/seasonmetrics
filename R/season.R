@@ -1,9 +1,9 @@
 #' Compute a season using cyclical observations
 #'
 #' @description
-#' Cyclical observations refers to vector on which the element before the first
-#' is the last one, and the element after the last vector element is the first
-#' one.
+#' Cyclical observations refers to vectors on which the element before the
+#' first is the last one, and the element after the last vector element is the
+#' first one.
 #'
 #' `compute_season_peak_threshold` estimate season's parameters using the
 #' season maximum value and a threshold. For example, given a year of monthly
@@ -14,8 +14,10 @@
 #' double sigmoidal function to the observations.
 #'
 #' @param x a numeric. A vector of cyclical observations.
+#' @param x_cycles a integer(1). Number of cycles in x.
 #' @param threshold_cons a numeric(1) between 0 and 1. The percentage of the
 #'   total a season must reach.
+#' @param f a character(1). A function to apply to aggregate x along cycles.
 #'
 #' @return a data frame with metrics:
 #'* `pos_from` and `pos_to` are the indices of the season's first and last
@@ -31,15 +33,25 @@
 #'
 #' @export
 #'
-compute_season_peak_threshold <- function(x, threshold_cons) {
+compute_season_peak_threshold <- function(x, threshold_cons, x_cycles = 1L, f = "sum") {
 
   stopifnot(
     "Invalid trehshold!" = all(0 < threshold_cons, threshold_cons <= 1)
   )
   stopifnot("Too few observations!" = length(x) > 1)
   stopifnot("Can't handle NAs!" = sum(is.na(x)) == 0)
+  stopifnot("Invalid number of cycles!" = x_cycles > 0)
+  stopifnot("length(x) mod x_cycles must be 0!" = length(x) %% x_cycles == 0)
 
   res <- get_na_df()
+
+  # Aggregate x when it covers moren than one cycle (season).
+  x <-
+    apply(
+      X <- matrix(data = x, ncol = x_cycles, byrow = FALSE),
+      MARGIN = 1,
+      FUN = f
+    )
 
   # Test if the time series is flat.
   if (length(unique(x)) == 1) {
@@ -113,10 +125,12 @@ get_prev_next <- function(y, total_len) {
 #'
 #' @export
 #'
-compute_season_double_sig <- function(x, n_runs_min = 20, n_runs_max = 500) {
+compute_season_double_sig <- function(x, x_cycles = 1, n_runs_min = 20,
+                                      n_runs_max = 500) {
 
   stopifnot("Too few observations!" = length(x) > 1)
   stopifnot("I can't handle NAs!" = sum(is.na(x)) == 0)
+  stopifnot("Invalid number of cycles!" = x_cycles > 0)
 
   # Return if the given time series is flat.
   res <- get_na_df()
@@ -124,7 +138,7 @@ compute_season_double_sig <- function(x, n_runs_min = 20, n_runs_max = 500) {
     return(res)
   }
 
-  # Translate data.
+  # Ensure the minimum value is 0.
   v_min <- min(x)
   x <- x - v_min
 
@@ -205,21 +219,57 @@ un_center <- function(pos, x_df) {
 #'
 #' @description
 #' Center the given vector around its peak (maximum value). In this way, the
-#' peak would be at or close to the center position in the vector.
+#' peak would be at, or close to, the center position in the vector.
 #'
 #' @param x a numeric. A vector of cyclic observations.
+#' @param x_cycles a integer(1). Number of cycles in x.
+#' @param f a character(1). A function for aggregating data between cycles.
 #'
-#' @return a data frame with 3 columns: x, the original position of each
+#' @return a data frame with at least 3 columns: the original position of each
 #' observation (pos), and the centered position (center_pos). The x column is
 #' reordered according to center_pos.
 #'
-center_peak <- function(x) {
-  pos_mid <- which.max(x) - (length(x) / 2)
-  data_df <- data.frame(
-    x = displace_vec(x, n_pos = pos_mid),
-    pos = displace_vec(seq_along(x), n_pos = pos_mid)
+center_peak <- function(x, x_cycles = 1, f = "median") {
+
+  # Arrange one cycle in each column.
+  x_mt <- matrix(data = x, ncol = 1)
+  if (x_cycles > 1) {
+    x_mt <- matrix(
+      data = x,
+      ncol = x_cycles,
+      byrow = FALSE,
+      dimnames = list(NULL, paste0("cycle_", 1:x_cycles))
+    )
+  }
+
+  # Estime the expected value by row.
+  x_expected <- apply(
+    X = x_mt,
+    MARGIN = 1,
+    FUN = f
   )
-  data_df["center_pos"] <- seq_along(x)
+
+  # Find the position of the maximum value.
+  pos_mid <- which.max(x_expected) - (length(x_expected) / 2)
+
+  # Move the values to fit the maximum in the middle.
+  x_mt_displaced <-
+    apply(
+      X = x_mt,
+      MARGIN = 2,
+      FUN = displace_vec,
+      n_pos = pos_mid,
+      simplify = TRUE
+    )
+
+  # Build a data frame with the diplaced vectors.
+  data_df <- data.frame(x = x_mt_displaced)
+  data_df[["pos"]] <- displace_vec(
+    x = seq(nrow(x_mt_displaced)),
+    n_pos = pos_mid
+  )
+  data_df[["center_pos"]] <- seq(nrow(x_mt_displaced))
+
   return(data_df)
 }
 
