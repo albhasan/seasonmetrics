@@ -8,12 +8,20 @@
 #' @param id_col a character. Name of the ID column in x.
 #' @param val_col a character. Name of the column with a value.
 #' @param month_col a character. Name of the column with month numbers.
+#' @param threshold_cons a numeric(1) between 0 and 1. The percentage of the
+#'   total a season must reach. See [compute_season_peak_threshold].
 #'
 #' @return a data frame (tibble).
 #'
-season_peak_thres_helper <- function(
-    x, id_group, id_col,
-    val_col, month_col, threshold_cons) {
+#' @importFrom rlang :=
+#' @importFrom rlang .data
+#'
+#' @export
+#'
+season_peak_thres_helper <- function(x, id_group, id_col, val_col, month_col,
+                                     threshold_cons) {
+  `:=` <- `.data` <- NULL
+
   g_id <- unique(x[[id_group]])
   stopifnot("Only one group ID allowed!" = length(g_id) == 1)
   c_id <- unique(x[[id_col]])[1]

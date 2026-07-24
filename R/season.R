@@ -14,7 +14,7 @@
 #' double sigmoidal function to the observations.
 #'
 #' @param x a numeric. A vector of cyclical observations.
-#' @param x_cycles a integer(1). Number of cycles in x.
+#' @param n_cycles a integer(1). Number of cycles in x.
 #' @param threshold_cons a numeric(1) between 0 and 1. The percentage of the
 #'   total a season must reach.
 #' @param f a character(1). A function to apply to aggregate x along cycles.
@@ -33,48 +33,60 @@
 #'
 #' @export
 #'
-compute_season_peak_threshold <- function(x, threshold_cons, x_cycles = 1L, f = "sum") {
-
+compute_season_peak_threshold <- function(x,
+                                          threshold_cons,
+                                          n_cycles = 1L,
+                                          f = "sum") {
   stopifnot(
     "Invalid trehshold!" = all(0 < threshold_cons, threshold_cons <= 1)
   )
   stopifnot("Too few observations!" = length(x) > 1)
   stopifnot("Can't handle NAs!" = sum(is.na(x)) == 0)
-  stopifnot("Invalid number of cycles!" = x_cycles > 0)
-  stopifnot("length(x) mod x_cycles must be 0!" = length(x) %% x_cycles == 0)
+  stopifnot("Invalid number of cycles!" = n_cycles > 0)
+  stopifnot("length(x) mod n_cycles must be 0!" = length(x) %% n_cycles == 0)
+
+  # Ensure x is always a matrix.
+  if (inherits(x, what = "numeric") || inherits(x, what = "integer")) {
+    x <- get_cycle_matrix(x = x, n_cycles = n_cycles)
+  }
+
+  stopifnot("Only matrixes allowed!" = inherits(x, what = "matrix"))
 
   res <- get_na_df()
 
   # Aggregate x when it covers moren than one cycle (season).
-  x <-
+  fx <-
     apply(
-      X <- matrix(data = x, ncol = x_cycles, byrow = FALSE),
+      X = x,
       MARGIN = 1,
       FUN = f
     )
 
-  # Test if the time series is flat.
-  if (length(unique(x)) == 1) {
+  # Return if the time series is flat.
+  if (length(unique(fx)) == 1) {
     return(res)
   }
 
   # Estimate the actual threshold.
-  threshold <- sum(x) * threshold_cons
+  threshold <- sum(fx) * threshold_cons
 
   # The season's start value position (the peak) is the seed of the season.
-  season_pos <- as.integer(which.max(x))
+  season_pos <- as.integer(which.max(fx))
 
-  for (i in 1:(length(x) - 1)) {
-    if (sum(x[season_pos]) >= threshold) {
+  for (i in 1:(length(fx) - 1)) {
+    # Check the the threshold has been reached.
+    if (sum(fx[season_pos]) >= threshold) {
       break
     }
 
+    # Find the next positions to check.
     next_pos <- get_prev_next(
       y = season_pos,
-      total_len = length(x)
+      total_len = length(fx)
     )
 
-    if (x[next_pos[1]] >= x[next_pos[2]]) {
+    # Chooses which pos to add to the season: left or right.
+    if (fx[next_pos[1]] >= fx[next_pos[2]]) {
       season_pos <- c(next_pos[1], season_pos)
     } else {
       season_pos <- c(season_pos, next_pos[2])
@@ -83,83 +95,86 @@ compute_season_peak_threshold <- function(x, threshold_cons, x_cycles = 1L, f = 
 
   res["pos_from"] <- season_pos[1]
   res["val_from"] <- x[season_pos[1]]
-  res["pos_to"]   <- season_pos[length(season_pos)]
-  res["val_to"]   <- x[season_pos[length(season_pos)]]
-  res["pos_min"]  <- season_pos[which.min(x[season_pos])]
-  res["val_min"]  <- min(x[season_pos])
-  res["pos_max"]  <- season_pos[which.max(x[season_pos])]
-  res["val_max"]  <- max(x[season_pos])
-  res["val_len"]  <- length(season_pos)
+  res["pos_to"] <- season_pos[length(season_pos)]
+  res["val_to"] <- x[season_pos[length(season_pos)]]
+  res["pos_min"] <- season_pos[which.min(x[season_pos])]
+  res["val_min"] <- min(x[season_pos])
+  res["pos_max"] <- season_pos[which.max(x[season_pos])]
+  res["val_max"] <- max(x[season_pos])
+  res["val_len"] <- length(season_pos)
   res["val_mean"] <- mean(x[season_pos])
-  res["val_sd"]   <- stats::sd(x[season_pos])
+  res["val_sd"] <- stats::sd(x[season_pos])
+
+  # Estimate the coverage of the season.
+  perc_season <- rep(x = 0.0, times = nrow(x))
+  if (res["pos_from"][[1]] <= res["pos_to"][[1]]) {
+    perc_season[floor(res["pos_from"][[1]]):ceiling(res["pos_to"][[1]])] <- 1
+  } else if (res["pos_from"][[1]] > res["pos_to"][[1]]) {
+    pos_season <- floor(res["pos_to"][[1]]):ceiling(res["pos_from"][[1]])
+    pos_season <- setdiff(x = seq_len(nrow(x)), y = pos_season)
+    perc_season[pos_season] <- 1
+  }
+  res[["coverage"]] <- sum(rowSums(x, na.rm = TRUE) * perc_season)
 
   return(res)
 }
-
-
-
-#' Determine the next values for computing season
-#'
-#' @description
-#' Utility function. Get the next values to evaluate.
-#'
-#' @param y an integer vector with the current season (positions of the season
-#'   values).
-#' @param total_len an integer(1). The total number of elements is a cycle.
-#'
-#' @return  an integer(2) with the month before and after the given season.
-#'
-get_prev_next <- function(y, total_len) {
-  stopifnot("Invalid parameters!" = total_len > length(y))
-  y <- (c(y[1] - 1, y[length(y)] + 1) + total_len) %% total_len
-  y <- replace(y, y == 0, total_len)
-  return(y)
-}
-
 
 
 #' @rdname compute_season_peak_threshold
 #'
 #' @param n_runs_min,n_runs_max an integer(1). Minimum and maximum number of
 #'   successful fitting attempts.
+#' @param f a character(1). A function for aggregating data across cycles used
+#' to ensure the highest values are centered. See [get_cycle_matrix].
 #'
 #' @export
 #'
-compute_season_double_sig <- function(x, x_cycles = 1, n_runs_min = 20,
-                                      n_runs_max = 500) {
-
+compute_season_double_sig <- function(x, n_cycles = 1, n_runs_min = 20,
+                                      n_runs_max = 500, f) {
   stopifnot("Too few observations!" = length(x) > 1)
   stopifnot("I can't handle NAs!" = sum(is.na(x)) == 0)
-  stopifnot("Invalid number of cycles!" = x_cycles > 0)
+  stopifnot("Invalid number of cycles!" = n_cycles > 0)
+  stopifnot("Negative values not supported!" = all(x >= 0))
+  stopifnot("Too few observations per cycle!" = length(x) / n_cycles > 6)
+
+  # Ensure x is always a matrix.
+  if (inherits(x, what = "numeric") || inherits(x, what = "integer")) {
+    x <- get_cycle_matrix(x = x, n_cycles = n_cycles)
+  }
+
+  stopifnot("Only matrixes allowed!" = inherits(x, what = "matrix"))
+
+  res <- get_na_df()
 
   # Return if the given time series is flat.
-  res <- get_na_df()
   if (length(unique(x)) == 1) {
     return(res)
   }
 
-  # Ensure the minimum value is 0.
+  # Ensure the minimum value in the time series is 0.
   v_min <- min(x)
   x <- x - v_min
 
-  # Center around the peak.
-  x_df <- center_peak(x)
-  x_df["center_trans"] <- x_df[["pos"]] - x_df[["center_pos"]]
+  # Center around the peak value.
+  xcentered_df <- center_peak(x_mt = x, f = f)
 
   # Prepare data for regression.
+  # NOTE: sicegar always uses two columns: intensity and time.
   sicegar_df <- data.frame(
-    intensity = x_df[["x"]],
-    time      = seq_len(nrow(x_df))
+    intensity = unlist(xcentered_df[, 1:n_cycles]),
+    time = rep(xcentered_df[["center_pos"]], times = n_cycles)
   )
+
   sic_norm_df <- sicegar::normalizeData(sicegar_df)
 
   # Do the double-sigmoidal fit
-  model_fit <- sicegar::multipleFitFunction(
-    dataInput = sic_norm_df,
-    model = "doublesigmoidal",
-    n_runs_min = n_runs_min,
-    n_runs_max = n_runs_max
-  )
+  model_fit <-
+    sicegar::multipleFitFunction(
+      dataInput = sic_norm_df,
+      model = "doublesigmoidal",
+      n_runs_min = n_runs_min,
+      n_runs_max = n_runs_max
+    )
 
   # Check that the model fits.
   if (!model_fit[["isThisaFit"]]) {
@@ -170,151 +185,38 @@ compute_season_double_sig <- function(x, x_cycles = 1, n_runs_min = 20,
   m_par <- sicegar::parameterCalculation(model_fit)
 
   # Build a data frame with season parameters.
-  res["val_from"] <- m_par[["midPoint1_y"]]    + v_min
-  res["val_to"]   <- m_par[["midPoint2_y"]]    + v_min
-  res["val_max"]  <- m_par[["reachMaximum_y"]] + v_min
+  res["val_from"] <- m_par[["midPoint1_y"]] + v_min
+  res["val_to"] <- m_par[["midPoint2_y"]] + v_min
+  res["val_max"] <- m_par[["reachMaximum_y"]] + v_min
   res["pos_from"] <-
     (m_par[["midPoint1_x"]] +
-     un_center(m_par[["midPoint1_x"]], x_df = x_df)) %% length(x)
+      un_center(m_par[["midPoint1_x"]], x_df = xcentered_df)) %% length(x)
   res["pos_to"] <-
     (m_par[["midPoint2_x"]] +
-     un_center(m_par[["midPoint2_x"]], x_df = x_df)) %% length(x)
+      un_center(m_par[["midPoint2_x"]], x_df = xcentered_df)) %% length(x)
   res["pos_max"] <-
     (m_par[["reachMaximum_x"]] +
-     un_center(m_par[["reachMaximum_x"]], x_df = x_df)) %% length(x)
+      un_center(m_par[["reachMaximum_x"]], x_df = xcentered_df)) %% length(x)
   res["val_len"] <- ifelse(
     res[["pos_from"]] <= res[["pos_to"]],
     res[["pos_to"]] - res[["pos_from"]],
     (res[["pos_to"]] + length(x)) - res[["pos_from"]]
   )
 
-  return(res)
-}
-
-
-
-#' Uncentering an observation position
-#'
-#' @description
-#' This function undoes the effects of `center_peak` by compensating the given
-#' position to its original place.
-#'
-#' @param pos a numeric(1). A centered position of an observation in a vector.
-#' @param x_df a data frame. This data frame contains columns correspondign to
-#'   observations (x), their original positions (pos), their positions centered
-#'   (center_pos) and the translation requited to return the centered positions
-#'   to their original place (center_trans).
-#'
-#' @return a numeric. The transformation constant to return the given centered
-#'  position to its original place.
-#'
-un_center <- function(pos, x_df) {
-    cen_pos <- which.min(abs(x_df[["center_pos"]] - pos))
-    return(x_df[["center_trans"]][x_df[["center_pos"]] == cen_pos])
-}
-
-
-
-#' Center around the peak value
-#'
-#' @description
-#' Center the given vector around its peak (maximum value). In this way, the
-#' peak would be at, or close to, the center position in the vector.
-#'
-#' @param x a numeric. A vector of cyclic observations.
-#' @param x_cycles a integer(1). Number of cycles in x.
-#' @param f a character(1). A function for aggregating data between cycles.
-#'
-#' @return a data frame with at least 3 columns: the original position of each
-#' observation (pos), and the centered position (center_pos). The x column is
-#' reordered according to center_pos.
-#'
-center_peak <- function(x, x_cycles = 1, f = "median") {
-
-  # Arrange one cycle in each column.
-  x_mt <- matrix(data = x, ncol = 1)
-  if (x_cycles > 1) {
-    x_mt <- matrix(
-      data = x,
-      ncol = x_cycles,
-      byrow = FALSE,
-      dimnames = list(NULL, paste0("cycle_", 1:x_cycles))
-    )
+  # Estimate the coverage of the season.
+  perc_season <- rep(x = 0.0, times = nrow(x))
+  if (res["pos_from"][[1]] < res["pos_to"][[1]]) {
+    perc_season[floor(res["pos_from"][[1]]):ceiling(res["pos_to"][[1]])] <- 1
+  } else if (res["pos_from"][[1]] > res["pos_to"][[1]]) {
+    pos_season <- floor(res["pos_to"][[1]]):ceiling(res["pos_from"][[1]])
+    pos_season <- setdiff(x = seq_len(nrow(x)), y = pos_season)
+    perc_season[pos_season] <- 1
   }
+  perc_season[floor(res["pos_from"][[1]])] <-
+    1 - (res[["pos_from"]] - trunc(res[["pos_from"]]))
+  perc_season[floor(res["pos_to"][[1]])] <-
+    res[["pos_to"]] - trunc(res[["pos_to"]])
+  res[["coverage"]] <- sum(rowSums((x + v_min), na.rm = TRUE) * perc_season)
 
-  # Estime the expected value by row.
-  x_expected <- apply(
-    X = x_mt,
-    MARGIN = 1,
-    FUN = f
-  )
-
-  # Find the position of the maximum value.
-  pos_mid <- which.max(x_expected) - (length(x_expected) / 2)
-
-  # Move the values to fit the maximum in the middle.
-  x_mt_displaced <-
-    apply(
-      X = x_mt,
-      MARGIN = 2,
-      FUN = displace_vec,
-      n_pos = pos_mid,
-      simplify = TRUE
-    )
-
-  # Build a data frame with the diplaced vectors.
-  data_df <- data.frame(x = x_mt_displaced)
-  data_df[["pos"]] <- displace_vec(
-    x = seq(nrow(x_mt_displaced)),
-    n_pos = pos_mid
-  )
-  data_df[["center_pos"]] <- seq(nrow(x_mt_displaced))
-
-  return(data_df)
-}
-
-
-
-#' Displace vector elements
-#'
-#' @description
-#' Displace the elements in the given vector (to the left) by certain number of
-#' positions.
-#'
-#' @param x A vector.
-#' @param n_pos an integer. Number of positions to displace the vector's
-#' elements.
-#'
-#' @return the given vector with elements in a different order.
-#'
-displace_vec <- function(x, n_pos) {
-  stopifnot("Invalid n_pos!" = abs(n_pos) <= length(x))
-  if (n_pos < 0)
-    n_pos <- n_pos + length(x)
-  return(rep(x, 2)[(n_pos + 1):(length(x) + n_pos)])
-}
-
-
-
-#' Build an empty season data frame
-#'
-#' @description
-#' Create a data frame of NAs with the expected columns of a season data frame.
-#'
-#' @return a data frame.
-#'
-get_na_df <- function() {
-  return(data.frame(
-    pos_from = NA,
-    val_from = NA,
-    pos_to   = NA,
-    val_to   = NA,
-    pos_min  = NA,
-    val_min  = NA,
-    pos_max  = NA,
-    val_max  = NA,
-    val_len  = NA,
-    val_mean = NA,
-    val_sd   = NA
-  ))
+  return(res)
 }

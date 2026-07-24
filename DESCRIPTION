@@ -1,25 +1,28 @@
 Package: seasonmetrics
 Title: Compute Season Metrics
-Version: 0.0.0.9013
+Version: 0.0.0.9014
 Authors@R: c(person("Alber",  "Sánchez",  email = "alber.ipia@inpe.br",       role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7966-2880")),
              person("Guilherme", "Mataveli", email = "mataveli@alumni.usp.br",        role = c("aut"), comment = c(ORCID = "0000-0002-4645-0117"))
             )
 Description: Compute season metrics over aggregated data.
-Depends: R (>= 4.0.0)
+Depends: R (>= 4.1.0)
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
-Suggests: 
-    testthat (>= 3.0.0),
+Suggests:
+    ggplot2,
     purrr,
     sf,
-    tibble
+    testthat (>= 3.0.0),
+    tibble,
+    tidyr
 Config/testthat/edition: 3
 Imports:
     dplyr,
     lubridate,
     readr,
+    rlang,
     sicegar,
     terra,
     tidyselect
+Config/roxygen2/version: 8.0.0

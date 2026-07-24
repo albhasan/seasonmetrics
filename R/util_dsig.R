@@ -9,12 +9,20 @@
 #' @param id_col a character. Name of the ID column in x.
 #' @param val_col a character. Name of the column with a value.
 #' @param month_col a character. Name of the column with month numbers.
+#' @param n_runs_min,n_runs_max an integer(1). Minimum and maximum number of
+#'   successful fitting attempts. See [compute_season_double_sig].
 #'
 #' @return a data frame (tibble).
 #'
-season_peak_dsig_helper <- function(
-    x, id_group, id_col, val_col,
-    month_col, n_runs_min, n_runs_max) {
+#' @importFrom rlang :=
+#' @importFrom rlang .data
+#'
+#' @export
+#'
+season_peak_dsig_helper <- function(x, id_group, id_col, val_col, month_col,
+                                    n_runs_min, n_runs_max) {
+  `:=` <- `.data` <- NULL
+
   g_id <- unique(x[[id_group]])
   stopifnot("Only one group ID allowed!" = length(g_id) == 1)
   c_id <- unique(x[[id_col]])

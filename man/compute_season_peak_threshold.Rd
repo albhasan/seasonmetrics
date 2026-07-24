@@ -5,9 +5,15 @@
 \alias{compute_season_double_sig}
 \title{Compute a season using cyclical observations}
 \usage{
-compute_season_peak_threshold(x, threshold_cons, x_cycles = 1L, f = "sum")
+compute_season_peak_threshold(x, threshold_cons, n_cycles = 1L, f = "sum")
 
-compute_season_double_sig(x, x_cycles = 1, n_runs_min = 20, n_runs_max = 500)
+compute_season_double_sig(
+  x,
+  n_cycles = 1,
+  n_runs_min = 20,
+  n_runs_max = 500,
+  f
+)
 }
 \arguments{
 \item{x}{a numeric. A vector of cyclical observations.}
@@ -15,9 +21,10 @@ compute_season_double_sig(x, x_cycles = 1, n_runs_min = 20, n_runs_max = 500)
 \item{threshold_cons}{a numeric(1) between 0 and 1. The percentage of the
 total a season must reach.}
 
-\item{x_cycles}{a integer(1). Number of cycles in x.}
+\item{n_cycles}{a integer(1). Number of cycles in x.}
 
-\item{f}{a character(1). A function to apply to aggregate x along cycles.}
+\item{f}{a character(1). A function for aggregating data across cycles used
+to ensure the highest values are centered. See \link{get_cycle_matrix}.}
 
 \item{n_runs_min, n_runs_max}{an integer(1). Minimum and maximum number of
 successful fitting attempts.}
