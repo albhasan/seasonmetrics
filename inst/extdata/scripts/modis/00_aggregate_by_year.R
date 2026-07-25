@@ -17,7 +17,7 @@ rlog::log_info("Start new process -------------------------------------------")
 
 rlog::log_info("Reading parameters...")
 
-csv_files <- out_dir <- files_df_rds <- NULL
+csv_dir <- out_dir <- files_df_rds <- NULL
 source(
   system.file(
     "extdata", "scripts", "modis", "parameters.R",
@@ -26,7 +26,7 @@ source(
 )
 stopifnot(
   "Script parameter not found!" =
-    all(c("csv_files", "out_dir", "files_df_rds") %in% ls())
+    all(c("csv_dir", "out_dir", "files_df_rds") %in% ls())
 )
 
 # Load grid parameters
@@ -61,7 +61,7 @@ stopifnot(
 
 rlog::log_info("Listing CSV files...")
 files_df <-
-  csv_files |>
+  csv_dir |>
   list.files(pattern = "*.csv$", full.names = TRUE) |>
   dplyr::as_tibble() |>
   dplyr::rename(file_path = "value")
