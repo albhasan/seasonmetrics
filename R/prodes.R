@@ -14,23 +14,23 @@
 #' @return An integer.
 #' @export
 compute_prodes_year <- function(adate, start_month = "08", start_day = "01") {
-    stopifnot("PRODES month length should be 1" = length(start_month) == 1)
-    stopifnot("PRODES day length should be 1" = length(start_day) == 1)
-    if (length(adate) > 1) {
-        return(
-            vapply(adate, FUN = compute_prodes_year,
-                   FUN.VALUE = integer(1))
-        )
-    } else if (length(adate) == 1) {
-        date_year <- lubridate::year(adate)
-        prodes_start <- as.Date(paste(date_year, start_month, start_day,
-                                      sep = "-"))
-        if (adate >= prodes_start) {
-            return(as.integer(date_year + 1))
-        } else {
-            return(as.integer(date_year))
-        }
-    } else {
-        stop("Invalid length of PRODES date!")
-    }
+  stopifnot("PRODES month length should be 1" = length(start_month) == 1)
+  stopifnot("PRODES day length should be 1" = length(start_day) == 1)
+  if (inherits(adate, what = "Date") == FALSE) {
+    adate <- lubridate::as_date(adate)
+  }
+
+  start_date <- lubridate::as_date(
+    paste(
+      lubridate::year(adate),
+      start_month,
+      start_day,
+      sep = "-"
+    )
+  )
+
+  dtime <- as.vector(difftime(adate, start_date, units = "secs"))
+  res <- lubridate::year(adate)
+  res <- res + (dtime >= 0)
+  return(res)
 }

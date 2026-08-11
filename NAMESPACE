@@ -13,5 +13,7 @@ export(rasterize_points)
 export(season_peak_dsig_helper)
 export(season_peak_thres_helper)
 export(sort_cols)
-importFrom(rlang,":=")
-importFrom(rlang,.data)
+importFrom(rlang,
+  ":=",
+  .data
+)

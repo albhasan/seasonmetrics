@@ -1,6 +1,6 @@
 Package: seasonmetrics
 Title: Compute Season Metrics
-Version: 0.0.0.9015
+Version: 0.0.0.9016
 Authors@R: c(person("Alber",  "Sánchez",  email = "alber.ipia@inpe.br",       role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7966-2880")),
              person("Guilherme", "Mataveli", email = "mataveli@alumni.usp.br",        role = c("aut"), comment = c(ORCID = "0000-0002-4645-0117"))
             )
@@ -25,4 +25,4 @@ Imports:
     sicegar,
     terra,
     tidyselect
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.0
