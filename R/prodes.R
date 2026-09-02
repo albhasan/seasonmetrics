@@ -16,21 +16,16 @@
 compute_prodes_year <- function(adate, start_month = "08", start_day = "01") {
   stopifnot("PRODES month length should be 1" = length(start_month) == 1)
   stopifnot("PRODES day length should be 1" = length(start_day) == 1)
+
   if (inherits(adate, what = "Date") == FALSE) {
     adate <- lubridate::as_date(adate)
   }
 
-  start_date <- lubridate::as_date(
-    paste(
-      lubridate::year(adate),
-      start_month,
-      start_day,
-      sep = "-"
+  return(
+    compute_period(
+      adate = adate,
+      start_month = start_month,
+      start_day = start_day
     )
   )
-
-  dtime <- as.vector(difftime(adate, start_date, units = "secs"))
-  res <- lubridate::year(adate)
-  res <- res + (dtime >= 0)
-  return(res)
 }

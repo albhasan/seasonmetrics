@@ -101,3 +101,43 @@ date2monthdec <- function(adate) {
     month = lubridate::month(adate) + fraction_sec
   ))
 }
+
+
+#' @title Compute the period of the given date
+#'
+#' @name compute_period
+#'
+#' @description
+#' The period is the same concept as a the year, but it starts on a date
+#' different from January the 1st. The period takes the name of the year on
+#' which the period ends.
+#'
+#' @param adate A date vector.
+#' @param start_month A character(1). The month (number) of the first month of
+#' the period.
+#' @param start_day A character(1). The day (number) of the first day of the
+#' period.
+#'
+#' @return An integer.
+#'
+#' @export
+#'
+compute_period <- function(adate, start_month, start_day) {
+  stopifnot("Start month length should be 1!" = length(start_month) == 1)
+  stopifnot("Start day length should be 1!" = length(start_day) == 1)
+  stopifnot("Invalid date!" = inherits(adate, what = "Date"))
+
+  start_date <- lubridate::as_date(
+    paste(
+      lubridate::year(adate),
+      start_month,
+      start_day,
+      sep = "-"
+    )
+  )
+
+  dtime <- as.vector(difftime(adate, start_date, units = "secs"))
+  res <- lubridate::year(adate)
+  res <- res + (dtime >= 0)
+  return(res)
+}
