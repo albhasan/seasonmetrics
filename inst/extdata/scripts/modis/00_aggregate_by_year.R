@@ -1,6 +1,5 @@
 ###############################################################################
-# 00 AGGREGATE VIIRS DATA
-# NOTE: The results are 14M. The maximum allowed in a package is 5M
+# 00 AGGREGATE MODIS DATA
 ###############################################################################
 
 library(dplyr)
@@ -60,6 +59,7 @@ stopifnot(
 #---- Script ----
 
 rlog::log_info("Listing CSV files...")
+
 files_df <-
   csv_dir |>
   list.files(pattern = "*.csv$", full.names = TRUE) |>
@@ -72,7 +72,7 @@ if (cores_process_csv > 1) {
   options <- furrr::furrr_options(seed = 123)
 }
 
-rlog::log_info("Processing CSV files...")
+rlog::log_info("Aggratating points into a grid of cells...")
 files_df <-
   files_df |>
   dplyr::mutate(
@@ -88,7 +88,10 @@ files_df <-
 future::plan(sequential)
 gc()
 
-rlog::log_info("Saving results to disk...")
-saveRDS(object = files_df, file = files_df_rds)
+rlog::log_info(sprintf("Saving results to %s", files_df_rds))
+saveRDS(
+  object = files_df,
+  file = files_df_rds
+)
 
 rlog::log_info("Finished!")

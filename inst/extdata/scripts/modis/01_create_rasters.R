@@ -15,6 +15,8 @@ library(seasonmetrics)
 
 rlog::log_info("Start new process 01_create_rasters.R -----------------------")
 
+
+
 #---- Setup ----
 
 rlog::log_info("Reading parameters...")
@@ -34,8 +36,8 @@ stopifnot(
 all_years_r_rds <- file.path(out_dir, "all_years_r.rds")
 stopifnot("Previous `all_years_r_rds` file found!" = !file.exists(all_years_r_rds))
 
-two_years_r_rds <- file.path(out_dir, "two_years_r.rds")
-stopifnot("Previous `two_years_r_rds` file found!" = !file.exists(two_years_r_rds))
+t_years_r_rds <- file.path(out_dir, "t_years_r.rds")
+stopifnot("Previous `t_years_r_rds` file found!" = !file.exists(t_years_r_rds))
 
 # Load grid parameters
 xy_min <- xy_max <- grid_cells <- grid_crs <- NULL
@@ -92,8 +94,6 @@ rasterize_df <- function(
 
 
 
-
-
 #---- Script ----
 
 rlog::log_info("Loading data...")
@@ -107,7 +107,7 @@ unique_cent <-
   dplyr::select(cell_id, x_cent, y_cent) %>%
   dplyr::distinct(cell_id, x_cent, y_cent)
 
-rlog::log_info("Aggregating data from all years...")
+rlog::log_info("Aggregating data from all years into a cell by month table...")
 all_years_df <-
   files_df |>
   tidyr::unnest(data) |>
@@ -144,14 +144,11 @@ all_years_r <- lapply(
 names(all_years_r) <- var_names
 all_years_r <- terra::rast(all_years_r)
 
-rlog::log_info("Saving to disk...")
+rlog::log_info(sprintf("Saving monthly rasters to %s", all_years_r_rds))
 saveRDS(object = all_years_r, file = all_years_r_rds)
 
-
-
-rlog::log_info("Aggregating data from every 2 years...")
-n_years <- 2
-two_years_df <-
+rlog::log_info(sprintf("Aggregating data from every %s years...", n_years))
+t_years_df <-
   files_df |>
   tidyr::unnest(data) |>
   # Add a column indicating the first year of the grouping period.
@@ -174,16 +171,16 @@ two_years_df <-
   sort_cols()
 
 year_group_names <-
-  two_years_df |>
+  t_years_df |>
   dplyr::pull(year_group) |>
   unique() |>
   sort()
 
 
 
-rlog::log_info("Rasterizing...")
-two_years_r_ls <-
-  two_years_df |>
+rlog::log_info("Rasterizing grouped years...")
+t_years_r_ls <-
+  t_years_df |>
   dplyr::arrange(year_group) |>
   dplyr::group_by(year_group) |>
   dplyr::group_split() |>
@@ -210,12 +207,16 @@ two_years_r_ls <-
 
 # NOTE: terra objects need to be serialized before saving and
 # unserialized after reading (terra::unserialize).
-rlog::log_info("Saving to disk...")
-two_years_r_ls <- lapply(
-  X = two_years_r_ls,
+rlog::log_info("Serializing year-grouped rasters...")
+t_years_r_ls <- lapply(
+  X = t_years_r_ls,
   FUN = terra::serialize,
   connection = NULL
 )
-saveRDS(object = two_years_r_ls, file = two_years_r_rds)
+
+rlog::log_info(
+  sprintf("Saving year-grouped serialized rasters to %s", t_years_r_rds)
+)
+saveRDS(object = t_years_r_ls, file = t_years_r_rds)
 
 rlog::log_info("Finished!")

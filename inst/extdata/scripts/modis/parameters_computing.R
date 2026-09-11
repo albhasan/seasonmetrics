@@ -3,5 +3,5 @@ cores_process_csv <- 8L
 rlog::log_info("Number of cores for processing CSVs: ", cores_process_csv)
 
 # Number of cores to use in parallel to run regressions.
-cores_compute_season <- 16
+cores_process_season <- 16
 rlog::log_info("Number of cores for computing seasons: ", cores_process_season)
