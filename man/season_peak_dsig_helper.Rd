@@ -11,7 +11,9 @@ season_peak_dsig_helper(
   val_col,
   month_col,
   n_runs_min,
-  n_runs_max
+  n_runs_max,
+  n_cycles,
+  f
 )
 }
 \arguments{
@@ -27,6 +29,12 @@ season_peak_dsig_helper(
 
 \item{n_runs_min, n_runs_max}{an integer(1). Minimum and maximum number of
 successful fitting attempts. See \link{compute_season_double_sig}.}
+
+\item{n_cycles}{an integer(1). Number of cycles in each time series. See
+\code{compute_season_double_sig}.}
+
+\item{f}{a character (1). A function for aggregating data across cycles. See
+\code{compute_season_double_sig}.}
 }
 \value{
 a data frame (tibble).

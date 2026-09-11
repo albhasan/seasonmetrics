@@ -3,8 +3,6 @@
 # Run regression over the aggregated data using DOUBLE SIGMOIDAL FUNCTION.
 ##############################################################################
 
-
-
 library(dplyr)
 library(future)
 library(rlog)
@@ -61,7 +59,7 @@ stopifnot(
 )
 
 # Load parallel computing parameters.
-cores_compute_season <- NULL
+cores_process_season <- NULL
 source(
   system.file(
     "extdata", "scripts", "modis", "parameters_computing.R",
@@ -70,25 +68,8 @@ source(
 )
 stopifnot(
   "Grid parameters not found!" =
-    all(c("cores_compute_season") %in% ls())
+    all(c("cores_process_season") %in% ls())
 )
-
-
-
-#---- Utility ----
-rlog::log_info("Loading utility functions...")
-
-source(
-  system.file(
-    "extdata", "scripts", "util", "util_dsig.R",
-    package = "seasonmetrics"
-  )
-)
-stopifnot(
-  "double sigmoid utilitary functions not found!" =
-    all(c("season_peak_dsig_helper") %in% ls())
-)
-
 
 
 #---- Script ----
@@ -105,62 +86,96 @@ unique_cent <-
   dplyr::distinct(cell_id, x_cent, y_cent)
 
 rlog::log_info("Aggregating data from all years...")
+
 all_years_dsig <-
   files_df |>
   tidyr::unnest(data) |>
   dplyr::group_by(cell_id, month) |>
   dplyr::summarize(n_points = sum(n_points, na.rm = TRUE)) |>
   dplyr::ungroup() |>
-  dplyr::select(cell_id, month, n_points) |>
   dplyr::mutate(
-    month = stringr::str_pad(month, pad = 0, width = 2),
+    month = as.integer(month),
     group = "all"
-  )
+  ) |>
+  dplyr::arrange(cell_id, month)
+
+# #NOTE: I guess I don't need to filter cells. I would need empty cell for
+# #building a raster.
+# rlog::log_info("Estimating number of time steps of each cell.")
+# stats_tb <-
+#   all_years_dsig |>
+#   dplyr::group_by(cell_id) |>
+#   dplyr::summarize(
+#     n_months = dplyr::n(),
+#     total_ponts = sum(n_points)
+#   )
+# stopifnot(
+#   "Not cells found with enough data for regression!" =
+#   sum(stats_tb[["n_months"]] >= min_number_of_months) > 0
+# )
+# rlog::log_info(
+#   "Found ",
+#   sum(stats_tb[["n_months"]] >= min_number_of_months),
+#   "/",
+#   nrow(stats_tb),
+#   " cells that meet the mininum number of time steps."
+# )
 
 rlog::log_info("Splitting data by pixel...")
-all_years_dsig <-
+all_years_dsig_ls <-
   all_years_dsig |>
   dplyr::select(group, cell_id, month, n_points) |>
-  dplyr::mutate(month = as.integer(month)) |>
-  dplyr::arrange(cell_id, month) |>
   dplyr::group_by(cell_id) |>
   dplyr::group_split()
 
-rlog::log_info("Computing season using double sigmoidal function...")
+cores_process_season <- min(cores_process_season, parallel::detectCores())
+rlog::log_info(
+  sprintf("Setting up processing with %s cores...", cores_process_season)
+)
 
-if (cores_compute_season > 1) {
+if (cores_process_season > 1) {
   future::plan(
     strategy = future::multisession,
-    workers = cores_compute_season
+    workers = cores_process_season
   )
   options <- furrr::furrr_options(seed = 123)
 }
 
-all_years_dsig <-
-  all_years_dsig |>
+rlog::log_info("Computing season using double sigmoidal function...")
+all_years_dsig_ls <-
+  all_years_dsig_ls |>
   furrr::future_map(
-    purrr::possibly(.f = season_peak_dsig_helper, otherwise = "ERROR"),
+    purrr::possibly(
+      .f = season_peak_dsig_helper
+    ),
     id_group = "group",
     id_col = "cell_id",
     val_col = "n_points",
     month_col = "month",
     n_runs_min = n_runs_min,
-    n_runs_max = n_runs_max
+    n_runs_max = n_runs_max,
+    n_cycles = 1,
+    f = mean
   )
 
+rlog::log_info("Setting up sequential processing...")
 future::plan(future::sequential)
 
+all_years_dsig_ls_file <- file.path(out_dir, "all_years_dsig_ls.rds")
+rlog::log_info(
+  sprintf("Writing regressions of all years to to %s ", all_years_dsig_ls_file)
+)
 saveRDS(
-  object = all_years_dsig,
-  file = file.path(out_dir, "all_years_dsig.rds")
+  object = all_years_dsig_ls,
+  file = all_years_dsig_ls_file
 )
 
-# Remove failed fits.
-all_years_dsig <- all_years_dsig[sapply(all_years_dsig, is.data.frame)]
+rlog::log_info("Removing failed fits...")
+all_years_dsig_ls <- all_years_dsig_ls[sapply(all_years_dsig_ls, is.data.frame)]
 
-rlog::log_info("Converting results to spatial vectors...")
-all_years_dsig <-
-  all_years_dsig |>
+rlog::log_info("Converting results to spatial vector...")
+all_years_dsig_tb <-
+  all_years_dsig_ls |>
   dplyr::bind_rows() |>
   tibble::as_tibble() |>
   tidyr::separate(
@@ -173,7 +188,7 @@ all_years_dsig <-
 rlog::log_info("Rasterizing vectors...")
 
 var_names <-
-  colnames(all_years_dsig)[!colnames(all_years_dsig) %in%
+  colnames(all_years_dsig_tb)[!colnames(all_years_dsig_tb) %in%
     c(
       "geometry", "pos_min", "val_min",
       "val_mean", "val_sd", "cell_id",
@@ -183,7 +198,7 @@ var_names <-
 var_r <- lapply(
   X = var_names,
   FUN = rasterize_points,
-  data_sf = all_years_dsig,
+  data_sf = all_years_dsig_tb,
   grid_r = blank_raster(
     grid_cells = grid_cells, xy_min = xy_min,
     xy_max = xy_max, grid_crs = grid_crs
@@ -192,7 +207,9 @@ var_r <- lapply(
 names(var_r) <- var_names
 var_r <- terra::rast(var_r)
 
+all_years_dsig_r_file <- file.path(out_dir, "all_years_dsig_r.tif")
+rlog::log_info("Writing raster to:", all_years_dsig_r_file)
 terra::writeRaster(
   var_r,
-  filename = file.path(out_dir, "all_years_dsig_r.tif")
+  filename = all_years_dsig_r_file
 )

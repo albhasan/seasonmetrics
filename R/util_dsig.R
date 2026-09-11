@@ -11,6 +11,10 @@
 #' @param month_col a character. Name of the column with month numbers.
 #' @param n_runs_min,n_runs_max an integer(1). Minimum and maximum number of
 #'   successful fitting attempts. See [compute_season_double_sig].
+#' @param n_cycles an integer(1). Number of cycles in each time series. See
+#' `compute_season_double_sig`.
+#' @param f a character (1). A function for aggregating data across cycles. See
+#' `compute_season_double_sig`.
 #'
 #' @return a data frame (tibble).
 #'
@@ -20,7 +24,7 @@
 #' @export
 #'
 season_peak_dsig_helper <- function(x, id_group, id_col, val_col, month_col,
-                                    n_runs_min, n_runs_max) {
+                                    n_runs_min, n_runs_max, n_cycles, f) {
   `:=` <- `.data` <- NULL
 
   g_id <- unique(x[[id_group]])
@@ -46,8 +50,10 @@ season_peak_dsig_helper <- function(x, id_group, id_col, val_col, month_col,
     dplyr::arrange(.data[[month_col]]) |>
     dplyr::pull(tidyselect::all_of(val_col)) |>
     seasonmetrics::compute_season_double_sig(
+      n_cycles = n_cycles,
       n_runs_min = n_runs_min,
-      n_runs_max = n_runs_max
+      n_runs_max = n_runs_max,
+      f = f
     ) |>
     dplyr::mutate(
       "{id_group}" := g_id,

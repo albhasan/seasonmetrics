@@ -27,3 +27,10 @@ stopifnot(
 # Number of years for aggregating data.
 n_years <- 5
 rlog::log_info("Number of years of aggregation: ", n_years)
+
+# Minimum number of montly observations in a cell before trying a regression.
+min_number_of_months <- 7
+rlog::log_info(
+  "Mininum number of time steps before trying a regression: ",
+  min_number_of_months
+)
